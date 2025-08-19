@@ -16,6 +16,7 @@ from modules.face_analyser import (
     add_blank_map,
     has_valid_map,
     simplify_maps,
+    get_image_cache_key,
 )
 from modules.capturer import get_video_frame, get_video_frame_total
 from modules.processors.frame.core import get_frame_processors_modules
@@ -764,8 +765,9 @@ def update_preview(frame_number: int = 0) -> None:
         for frame_processor in get_frame_processors_modules(
                 modules.globals.frame_processors
         ):
+            cache_key = get_image_cache_key(modules.globals.source_path)
             temp_frame = frame_processor.process_frame(
-                get_one_face(cv2.imread(modules.globals.source_path)), temp_frame
+                get_one_face(cv2.imread(modules.globals.source_path), cache_key), temp_frame
             )
         image = Image.fromarray(cv2.cvtColor(temp_frame, cv2.COLOR_BGR2RGB))
         image = ImageOps.contain(
@@ -908,7 +910,8 @@ def create_webcam_preview(camera_index: int):
 
         if not modules.globals.map_faces:
             if source_image is None and modules.globals.source_path:
-                source_image = get_one_face(cv2.imread(modules.globals.source_path))
+                cache_key = get_image_cache_key(modules.globals.source_path)
+                source_image = get_one_face(cv2.imread(modules.globals.source_path), cache_key)
 
             for frame_processor in frame_processors:
                 if frame_processor.NAME == "DLC.FACE-ENHANCER":

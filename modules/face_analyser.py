@@ -24,18 +24,38 @@ def get_face_analyser() -> Any:
     return FACE_ANALYSER
 
 
-def get_one_face(frame: Frame) -> Any:
+def get_one_face(frame: Frame, cache_key=None) -> Any:
+    if cache_key and cache_key in modules.globals.face_cache:
+        cached_result = modules.globals.face_cache[cache_key]
+        if cached_result['type'] == 'one_face':
+            return cached_result['result']
+    
     face = get_face_analyser().get(frame)
     try:
-        return min(face, key=lambda x: x.bbox[0])
+        result = min(face, key=lambda x: x.bbox[0])
+        if cache_key:
+            modules.globals.face_cache[cache_key] = {'type': 'one_face', 'result': result}
+        return result
     except ValueError:
+        if cache_key:
+            modules.globals.face_cache[cache_key] = {'type': 'one_face', 'result': None}
         return None
 
 
-def get_many_faces(frame: Frame) -> Any:
+def get_many_faces(frame: Frame, cache_key=None) -> Any:
+    if cache_key and cache_key in modules.globals.face_cache:
+        cached_result = modules.globals.face_cache[cache_key]
+        if cached_result['type'] == 'many_faces':
+            return cached_result['result']
+    
     try:
-        return get_face_analyser().get(frame)
+        result = get_face_analyser().get(frame)
+        if cache_key:
+            modules.globals.face_cache[cache_key] = {'type': 'many_faces', 'result': result}
+        return result
     except IndexError:
+        if cache_key:
+            modules.globals.face_cache[cache_key] = {'type': 'many_faces', 'result': None}
         return None
 
 def has_valid_map() -> bool:
@@ -187,3 +207,19 @@ def dump_faces(centroids: Any, frame_face_embeddings: list):
                     if temp_frame[int(y_min):int(y_max), int(x_min):int(x_max)].size > 0:
                         cv2.imwrite(temp_directory_path + f"/{i}/{frame['frame']}_{j}.png", temp_frame[int(y_min):int(y_max), int(x_min):int(x_max)])
                 j += 1
+
+
+def clear_face_cache() -> None:
+    """Clear the face analysis cache"""
+    modules.globals.face_cache.clear()
+
+
+def get_image_cache_key(image_path: str):
+    """Generate cache key from image path and modification time"""
+    if not image_path or not os.path.exists(image_path):
+        return None
+    try:
+        mtime = os.path.getmtime(image_path)
+        return f"{image_path}:{mtime}"
+    except OSError:
+        return None

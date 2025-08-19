@@ -4,6 +4,8 @@ from typing import List, Dict, Any
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 WORKFLOW_DIR = os.path.join(ROOT_DIR, "workflow")
 
+face_cache = {}
+
 file_types = [
     ("Image", ("*.png", "*.jpg", "*.jpeg", "*.gif", "*.bmp")),
     ("Video", ("*.mp4", "*.mkv")),

@@ -7,7 +7,7 @@ import modules.globals
 import logging
 import modules.processors.frame.core
 from modules.core import update_status
-from modules.face_analyser import get_one_face, get_many_faces, default_source_face
+from modules.face_analyser import get_one_face, get_many_faces, default_source_face, get_image_cache_key
 from modules.typing import Face, Frame
 from modules.utilities import (
     conditional_download,
@@ -214,7 +214,8 @@ def process_frames(
     source_path: str, temp_frame_paths: List[str], progress: Any = None
 ) -> None:
     if not modules.globals.map_faces:
-        source_face = get_one_face(cv2.imread(source_path))
+        cache_key = get_image_cache_key(source_path)
+        source_face = get_one_face(cv2.imread(source_path), cache_key)
         for temp_frame_path in temp_frame_paths:
             temp_frame = cv2.imread(temp_frame_path)
             try:
@@ -240,7 +241,8 @@ def process_frames(
 
 def process_image(source_path: str, target_path: str, output_path: str) -> None:
     if not modules.globals.map_faces:
-        source_face = get_one_face(cv2.imread(source_path))
+        cache_key = get_image_cache_key(source_path)
+        source_face = get_one_face(cv2.imread(source_path), cache_key)
         target_frame = cv2.imread(target_path)
         result = process_frame(source_face, target_frame)
         cv2.imwrite(output_path, result)
